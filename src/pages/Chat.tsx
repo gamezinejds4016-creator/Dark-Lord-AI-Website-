@@ -1,36 +1,62 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import { fileToDataUrl, extractFileContent } from '../lib/fileUtils'
+import AttachmentPanel from '../components/AttachmentPanel'
+import { useLocalStore } from '../hooks/useLocalStore'
+import { sendPrompt } from '../lib/ai'
 
-type Message = { id: string; role: 'user' | 'bot'; text: string }
+type Attachment = { id: string; name: string; type: string; size: number; dataUrl?: string; extracted?: string }
+type Message = { id: string; role: 'user' | 'bot'; text: string; attachments?: Attachment[] }
 
 const LS_KEY = 'dl_messages'
 
 function uid() { return Math.random().toString(36).slice(2, 9) }
 
 export default function Chat() {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    try { const raw = localStorage.getItem(LS_KEY); return raw ? JSON.parse(raw) : [] } catch { return [] }
-  })
+  const [messages, setMessages] = useLocalStore<Message[]>(LS_KEY, [])
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
-  const [flashcards, setFlashcards] = useState<Array<{id:string,front:string,back:string}>>(() => {
-    try { const raw = localStorage.getItem('dl_flashcards'); return raw ? JSON.parse(raw) : [] } catch { return [] }
-  })
+  const [attachments, setAttachments] = useLocalStore<Attachment[]>('dl_attachments', [])
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  useEffect(() => { localStorage.setItem(LS_KEY, JSON.stringify(messages)) }, [messages])
-  useEffect(() => { localStorage.setItem('dl_flashcards', JSON.stringify(flashcards)) }, [flashcards])
+  useEffect(() => { /* migrate old flashcards if present - removed elsewhere */ }, [])
+
+  async function handleFileSelect(files: FileList | null) {
+    if (!files) return
+    const arr = Array.from(files)
+    const newAttachments: Attachment[] = []
+    for (const f of arr) {
+      const dataUrl = await fileToDataUrl(f)
+      const extracted = await extractFileContent(f, dataUrl)
+      newAttachments.push({ id: uid(), name: f.name, type: f.type || 'application/octet-stream', size: f.size, dataUrl, extracted })
+    }
+    setAttachments((s) => [...newAttachments, ...s])
+  }
+
+  function openFilePicker() { fileInputRef.current?.click() }
 
   async function send() {
-    if (!text.trim()) return
-    const userMsg: Message = { id: uid(), role: 'user', text: text.trim() }
+    if (!text.trim() && attachments.length === 0) return
+    const userMsg: Message = { id: uid(), role: 'user', text: text.trim(), attachments: attachments }
     setMessages((s) => [...s, userMsg])
     setText('')
+    setAttachments([]) // consumed attachments
     setLoading(true)
+
+    // Build prompt that includes extracted text from attachments if any
+    let prompt = userMsg.text
+    if (userMsg.attachments && userMsg.attachments.length) {
+      const lines: string[] = ['\n--- Attachments extracted content:']
+      for (const a of userMsg.attachments) {
+        if (a.extracted) lines.push(`Attachment: ${a.name}\n${a.extracted}\n`)
+        else lines.push(`Attachment: ${a.name} (type: ${a.type}, no extracted text available)`)
+      }
+      prompt += '\n' + lines.join('\n')
+    }
+
     try {
-      const res = await fetch('/api/ai-proxy', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ prompt: userMsg.text }) })
-      if (!res.ok) throw new Error('API error')
-      const data = await res.json()
-      const botText = (data?.output) || (data?.text) || JSON.stringify(data)
-      const botMsg: Message = { id: uid(), role: 'bot', text: String(botText) }
+      const res = await sendPrompt(prompt, '')
+      if (!res.ok) throw new Error(res.error || 'AI error')
+      const botMsg: Message = { id: uid(), role: 'bot', text: String(res.text) }
       setMessages((s) => [...s, botMsg])
     } catch (err:any) {
       const botMsg: Message = { id: uid(), role: 'bot', text: 'Error: ' + (err.message || String(err)) }
@@ -38,20 +64,13 @@ export default function Chat() {
     } finally { setLoading(false) }
   }
 
-  function saveAsFlashcard(m: Message) {
-    if (m.role !== 'bot') return
-    const card = { id: uid(), front: m.text.slice(0, 80), back: m.text }
-    setFlashcards((s) => [card, ...s])
-    alert('Saved as flashcard')
+  function removeAttachment(id: string) {
+    setAttachments((s) => s.filter(a => a.id !== id))
   }
 
-  function exportData() {
-    const data = { messages, flashcards }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = 'dark-lord-data.json'; a.click()
-    URL.revokeObjectURL(url)
+  function insertAttachmentToComposer(att: Attachment) {
+    // Temporarily add preview text; user must press send
+    setText((t) => (t ? t + ' ' : '') + `[Attachment: ${att.name}]`)
   }
 
   return (
@@ -59,7 +78,6 @@ export default function Chat() {
       <header className="header">
         <h1>AI Study Assistant</h1>
         <div className="actions">
-          <button onClick={exportData}>Export</button>
         </div>
       </header>
 
@@ -70,32 +88,54 @@ export default function Chat() {
               <div key={m.id} className={"message " + m.role} role="listitem">
                 <div className="role">{m.role === 'user' ? 'You' : 'Tutor'}</div>
                 <div className="text">{m.text}</div>
-                {m.role === 'bot' && <button className="save" onClick={() => saveAsFlashcard(m)}>Save as flashcard</button>}
+                {m.attachments && m.attachments.length > 0 && (
+                  <div className="message-attachments">
+                    {m.attachments.map(a => (
+                      <div key={a.id} className="msg-attach">
+                        {a.type.startsWith('image/') && a.dataUrl ? (
+                          <img src={a.dataUrl} alt={a.name} />
+                        ) : (
+                          <div className="file-box">{a.name}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
 
           <div className="composer">
-            <input value={text} onChange={e => setText(e.target.value)} placeholder="Ask a study question..." onKeyDown={e => e.key === 'Enter' && send()} />
-            <button onClick={send} disabled={loading}>{loading ? 'Thinking...' : 'Send'}</button>
+            <div className="composer-row">
+              <button className="attach-btn" title="Attach file" onClick={openFilePicker}>＋</button>
+              <input ref={fileInputRef} type="file" style={{display:'none'}} multiple onChange={e => handleFileSelect(e.target.files)} />
+              <input value={text} onChange={e => setText(e.target.value)} placeholder="Ask a study question..." onKeyDown={e => e.key === 'Enter' && send()} />
+              <button onClick={send} disabled={loading}>{loading ? 'Thinking...' : 'Send'}</button>
+            </div>
+
+            {attachments.length > 0 && (
+              <div className="composer-attachments">
+                {attachments.map(a => (
+                  <div key={a.id} className="composer-attachment">
+                    {a.type.startsWith('image/') && a.dataUrl ? <img src={a.dataUrl} alt={a.name} /> : <div className="file-box-small">{a.name}</div>}
+                    <div className="composer-attachment-actions">
+                      <button onClick={() => insertAttachmentToComposer(a)}>Insert</button>
+                      <button onClick={() => removeAttachment(a.id)}>Remove</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
         <aside className="sidebar">
-          <h3>Flashcards</h3>
-          <div className="cards">
-            {flashcards.length === 0 && <div className="empty">No flashcards yet</div>}
-            {flashcards.map(c => (
-              <details key={c.id} className="card">
-                <summary>{c.front}</summary>
-                <div className="back">{c.back}</div>
-              </details>
-            ))}
-          </div>
+          <h3>Attachments</h3>
+          <AttachmentPanel attachments={attachments} onInsert={insertAttachmentToComposer} onDelete={(id)=>removeAttachment(id)} />
         </aside>
       </main>
 
-      <footer className="footer">Everything is stored locally. Set up GROQ_API_KEY in Vercel to enable AI.</footer>
+      <footer className="footer">Attachments are stored locally in your browser. No files are uploaded.</footer>
     </div>
   )
 }

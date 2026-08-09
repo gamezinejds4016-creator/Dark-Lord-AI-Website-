@@ -1,0 +1,15 @@
+/* Attachment / chat styles */
+.composer-row{display:flex;align-items:center;gap:8px}
+.attach-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);width:36px;height:36px;border-radius:8px;font-size:20px}
+.composer-attachments{display:flex;gap:8px;margin-top:8px;overflow:auto}
+.composer-attachment{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.02);padding:6px;border-radius:8px}
+.composer-attachment img{height:56px;border-radius:6px}
+.file-box{padding:8px 12px;background:rgba(255,255,255,0.02);border-radius:6px}
+.file-box-small{padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:6px}
+.attachment-panel{display:flex;flex-direction:column;gap:8px}
+.attachment-item{display:flex;gap:8px;align-items:center;background:rgba(255,255,255,0.02);padding:8px;border-radius:8px}
+.attachment-item .thumb img{height:56px;border-radius:6px}
+.attachment-item .meta{flex:1}
+.attachment-item .actions{display:flex;gap:6px}
+.msg-attach img{max-width:220px;border-radius:8px}
+.message-attachments{margin-top:8px;display:flex;gap:8px}
