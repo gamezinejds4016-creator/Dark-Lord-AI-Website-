@@ -18,14 +18,36 @@ export default function Dashboard({ onNavigate }: { onNavigate: (p:string)=>void
 
   return (
     <div className="dashboard">
-      <header className="dashboard-header">
-        <h2>Welcome, Student 👋</h2>
-        <p>Ready to learn? Your AI Study Assistant is here to help.</p>
-        <div className="cta-row">
-          <button className="primary" onClick={() => onNavigate('chat')}>Open AI Study Assistant</button>
-          <button className="secondary" onClick={() => onNavigate('practice')}>Start Practice</button>
+      <section className="hero">
+        <div className="hero-inner">
+          <div className="hero-badge">The Most Powerful AI Assistant</div>
+          <h1 className="hero-title">Dark Lord<br/>Your Ultimate<br/>Study Companion</h1>
+          <p className="hero-sub">The most powerful AI assistant that can help with absolutely anything. From homework and exams to coding, research, writing, and creative projects. Upload images, files, links — Dark Lord handles it all.</p>
+          <div className="hero-cta">
+            <button className="primary" onClick={() => onNavigate('chat')}>Start Chatting →</button>
+            <button className="secondary" onClick={() => onNavigate('practice')}>Practice Questions</button>
+          </div>
         </div>
-      </header>
+      </section>
+
+      <section className="about-card">
+        <div className="card-inner">
+          <div className="card-badge">About My Creator</div>
+          <h2 className="card-title">THE DARK LORD RETURNS</h2>
+          <p className="card-quote">"Every legend has an origin. Every prophecy has a chosen name."</p>
+
+          <div className="creator-name">Deekshith Srivastav Jhade</div>
+
+          <div className="attributes">
+            <div className="attr">A seeker of knowledge.</div>
+            <div className="attr">A master of strategy.</div>
+            <div className="attr">A mind driven by curiosity.</div>
+            <div className="attr">A soul determined to forge its own destiny.</div>
+          </div>
+
+          <p className="card-footer">Not born to follow legends... But to create one.</p>
+        </div>
+      </section>
 
       <section className="subjects">
         <h3>Subjects</h3>
@@ -33,15 +55,6 @@ export default function Dashboard({ onNavigate }: { onNavigate: (p:string)=>void
           {['Mathematics','Physics','Chemistry','Biology','English','Social Science','Information Technology'].map(s => (
             <SubjectCard key={s} title={s} onClick={() => startChatWithSubject(s)} />
           ))}
-        </div>
-      </section>
-
-      <section className="quick-actions">
-        <h3>Quick Actions</h3>
-        <div className="actions-row">
-          <button onClick={() => onNavigate('practice')}>Start Quiz</button>
-          <button onClick={() => onNavigate('notes')}>Upload Notes</button>
-          <button onClick={() => onNavigate('chat')}>Revision Mode</button>
         </div>
       </section>
 

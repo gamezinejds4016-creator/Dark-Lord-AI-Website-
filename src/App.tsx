@@ -8,12 +8,26 @@ import AdminDashboard from './pages/AdminDashboard'
 import './styles/index.css'
 
 export default function App() {
-  const [route, setRoute] = useState<'dashboard'|'chat'|'practice'|'notes'|'settings'|'admin'>('dashboard')
+  const [route, setRoute] = useState<'dashboard'|'chat'|'practice'|'notes'|'settings'|'admin'|'admin-login'>('dashboard')
 
   function navigate(to: typeof route) { setRoute(to) }
 
   return (
     <div className="app-shell">
+      <header className="topbar">
+        <div className="topbar-inner">
+          <div className="brand">🧙‍♂️ <strong>Dark Lord</strong></div>
+          <nav className="topnav">
+            <button onClick={() => navigate('dashboard')} className={route==='dashboard' ? 'active':''}>Home</button>
+            <button onClick={() => navigate('chat')} className={route==='chat' ? 'active':''}>Chat</button>
+            <button onClick={() => navigate('practice')} className={route==='practice' ? 'active':''}>Practice</button>
+            <button onClick={() => navigate('admin-login')} className={route==='admin' || route==='admin-login' ? 'active':''}>Admin</button>
+            <button onClick={() => navigate('settings')} className={route==='settings' ? 'active':''}>Settings</button>
+          </nav>
+          <div className="avatar">S</div>
+        </div>
+      </header>
+
       <main className="page-container">
         {route === 'dashboard' && <Dashboard onNavigate={navigate} />}
         {route === 'chat' && <Chat />}
@@ -29,9 +43,7 @@ export default function App() {
       </main>
 
       <BottomNav active={route} onNavigate={(p:any)=>{
-        // allow Admin login to be reached via nav
         if(p==='admin'){
-          // navigate to login page first
           navigate('admin-login')
         } else navigate(p)
       }} />
