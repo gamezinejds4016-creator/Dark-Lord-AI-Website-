@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 
 type Message = { id: string; role: 'user' | 'bot'; text: string }
 
-dconst LS_KEY = 'dl_messages'
+const LS_KEY = 'dl_messages'
 
 function uid() { return Math.random().toString(36).slice(2, 9) }
 
