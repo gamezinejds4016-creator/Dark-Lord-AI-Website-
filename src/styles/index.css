@@ -1,0 +1,17 @@
+body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin:0; background:#0f1724; color:#e6eef8 }
+.header{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;background:linear-gradient(90deg,#0b1220, #0f1724);border-bottom:1px solid rgba(255,255,255,0.03)}
+.header h1{margin:0;font-size:1.1rem}
+.actions button{background:#2563eb;color:white;border:0;padding:0.4rem 0.7rem;border-radius:6px}
+.main{display:flex;gap:1rem;padding:1rem}
+.chat{flex:1;display:flex;flex-direction:column;height:70vh;border-radius:8px;background:#071027;padding:1rem}
+.messages{flex:1;overflow:auto;padding-right:0.5rem}
+.message{padding:0.5rem;border-radius:8px;margin-bottom:0.6rem}
+.message.user{background:#07203a;color:#cfe8ff;align-self:flex-end}
+.message.bot{background:#0b1b2b;color:#dff1ff}
+.message .role{font-size:0.75rem;color:rgba(255,255,255,0.6);margin-bottom:0.2rem}
+.composer{display:flex;gap:0.5rem;margin-top:0.6rem}
+.composer input{flex:1;padding:0.6rem;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:#021124;color:inherit}
+.composer button{padding:0.6rem 0.9rem;border-radius:6px;border:0;background:#0ea5a4;color:black}
+.sidebar{width:320px;background:#061025;padding:1rem;border-radius:8px;height:70vh;overflow:auto}
+.card{background:#07122a;padding:0.6rem;border-radius:6px;margin-bottom:0.6rem}
+.footer{padding:0.8rem 1rem;font-size:0.85rem;color:rgba(255,255,255,0.6)}
