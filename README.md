@@ -2,6 +2,8 @@
 
 This repository contains a minimal Vite + React demo for the "Dark Lord" AI Study Bot. It is intentionally local-first so students can try it quickly without creating accounts.
 
+> Note: Non-functional change committed to trigger a redeploy after proxy fix.
+
 Quick start
 
 1. Install:
